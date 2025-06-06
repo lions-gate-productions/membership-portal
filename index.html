@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lions Gate Bureau - Elite Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Montserrat', Arial, sans-serif; }
+    body { margin: 0; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+    .light-theme { background: linear-gradient(135deg, #f5f7fa, #c3cfe2); color: #333; }
+    .dark-theme { background: linear-gradient(135deg, #1f2a44, #2d3e63); color: #ffffff; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); padding: 20px; transition: transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .btn { background: linear-gradient(90deg, #d4af37, #b89729); color: #fff; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.2s; }
+    .btn:hover { background: linear-gradient(90deg, #e6c84b, #d4af37); transform: scale(1.05); }
+    .btn:disabled { background: #4a5e7d; cursor: not-allowed; }
+    .input { background: rgba(255, 255, 255, 0.15); border: 1px solid #d4af37; color: inherit; padding: 10px; border-radius: 6px; width: 100%; transition: border-color 0.3s; }
+    .input:focus { border-color: #b89729; outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.5); }
+    .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+    .fade-enter, .fade-leave-to { opacity: 0; }
+    .slide-enter-active, .slide-leave-active { transition: transform 0.3s; }
+    .slide-enter { transform: translateX(100%); }
+    .slide-leave-to { transform: translateX(-100%); }
+    .hidden { display: none; }
+    .profile-pic { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #d4af37; }
+    #xp-bar-container { position: relative; height: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; }
+    #xp-bar { height: 100%; background: linear-gradient(90deg, #d4af37, #b89729); transition: width 0.5s ease-in-out; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 50; }
+    .modal-content { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin: 10% auto; padding: 20px; border-radius: 12px; max-width: 500px; }
+    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    .notification-bell { position: relative; cursor: pointer; }
+    .notification-count { position: absolute; top: -5px; right: -5px; background: #ff4444; color: #fff; font-size: 12px; border-radius: 50%; padding: 2px 6px; }
+    .notification-list { position: absolute; top: 40px; right: 0; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 8px; width: 300px; max-height: 400px; overflow-y: auto; z-index: 10; display: none; }
+    .notification-item { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+    .id-card { background: url('https://via.placeholder.com/300x200?text=Lion+Watermark') no-repeat center; background-size: cover; background-blend-mode: overlay; background-color: rgba(45, 62, 99, 0.9); }
+  </style>
+</head>
+<body class="dark-theme">
+  <!-- Particle Background -->
+  <canvas id="particles" class="particles"></canvas>
+
+  <!-- Navigation Bar -->
+  <nav class="bg-gray-900 p-4 shadow-lg sticky top-0 z-40">
+    <div class="container flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <img src="lionsgate-logo.png" alt="Lions Gate Logo" class="w-12 h-12 cursor-pointer" onclick="logoClick()">
+        <h2 class="text-xl font-bold">Lions Gate Bureau</h2>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button id="theme-toggle" class="text-2xl" onclick="toggleTheme()" aria-label="Toggle Theme">🌙</button>
+        <div id="notification-bell" class="notification-bell hidden" onclick="toggleNotifications()">
+          🔔 <span id="notification-count" class="notification-count">0</span>
+          <div id="notification-list" class="notification-list"></div>
+        </div>
+        <div id="nav-links" class="space-x-4 hidden md:flex">
+          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('dashboard-page'); return false;">Dashboard</a>
+          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('profile-page'); return false;">Profile</a>
+          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('membership-page'); return false;">Membership</a>
+          <a href="#" class="text-white hover:text-yellow-300" onclick="logout(); return false;">Logout</a>
+        </div>
+        <button id="menu-toggle" class="md:hidden text-white focus:outline-none" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Welcome Screen -->
+  <div id="welcome-page" class="page active fade-enter-active">
+    <div class="container text-center">
+      <h1 class="text-5xl font-bold mb-6 text-yellow-300">Welcome to Lions Gate Bureau</h1>
+      <p class="text-xl mb-6">"Where Legends Meet Loyalty"</p>
+      <p class="text-yellow-200 mb-4">Please use your invitation link provided by an administrator to access the portal.</p>
+      <p id="welcome-feedback" class="text-red-400 mt-4"></p>
+    </div>
+  </div>
+
+  <!-- Authorization Page -->
+  <div id="auth-page" class="page hidden slide-enter-active">
+    <div class="container">
+      <div class="card text-center" data-tilt>
+        <h1 class="text-3xl font-bold mb-4 text-yellow-300">Authorize Access</h1>
+        <div id="biometric-section">
+          <img id="user-pic" src="" alt="User" class="profile-pic mx-auto mb-4">
+          <h2 id="user-welcome" class="text-lg mb-4"></h2>
+          <p class="text-yellow-200 mb-4">Biometric verification in progress...</p>
+          <button onclick="completeBiometric()" class="btn mb-4">Complete Scan</button>
+        </div>
+        <div id="code-section" class="hidden">
+          <h2 class="text-lg mb-4">Scan Complete!</h2>
+          <p class="text-yellow-200 mb-4">Enter authorization code ($1150 fee required)</p>
+          <p class="text-sm text-yellow-300 mb-4">(Demo Code: L-26031998)</p>
+          <input id="auth-code" type="text" placeholder="Enter code" class="input mb-4 text-center">
+          <button onclick="verifyCode()" class="btn w-full">Verify</button>
+        </div>
+        <p id="auth-feedback" class="text-red-400 mt-4"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ID Card Page -->
+  <div id="id-card-page" class="page hidden slide-enter-active">
+    <div class="container text-center">
+      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Your Elite Membership ID Card</h1>
+      <div id="id-card" class="card id-card max-w-sm mx-auto mb-6" data-tilt>
+        <h2 class="text-lg font-bold mb-4">Lions Gate Bureau</h2>
+        <img id="card-pic" src="" alt="Profile" class="profile-pic mx-auto mb-4">
+        <div class="space-y-2 text-left">
+          <p><strong>Name:</strong> <span id="card-username"></span></p>
+          <p><strong>Email:</strong> <span id="card-email"></span></p>
+          <p><strong>Status:</strong> <span id="card-status"></span></p>
+          <p class="text-center"><strong>Access Code:</strong> <span id="card-access-code" class="text-yellow-300 font-bold"></span></p>
+          <p class="text-center"><strong>Membership ID:</strong> <span id="card-membership-id" class="text-yellow-300 font-bold"></span></p>
+        </div>
+        <div id="card-qr" class="mt-4 flex justify-center"></div>
+      </div>
+      <div class="space-y-4">
+        <button onclick="downloadCard()" class="btn">Download ID Card</button>
+        <button onclick="showPage('dashboard-page')" class="btn">Enter Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div id="dashboard-page" class="page hidden slide-enter-active">
+    <div class="container">
+      <h1 id="dashboard-welcome" class="text-3xl font-bold text-center mb-6 text-yellow-300"></h1>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="card" data-tilt>
+          <h2 class="text-lg font-bold mb-4">Experience Points</h2>
+          <p id="user-points" class="text-xl font-bold mb-4"></p>
+          <div id="xp-bar-container" class="mb-4">
+            <div id="xp-bar"></div>
+          </div>
+          <button onclick="earnReward()" class="btn w-full">Earn Reward (50 XP)</button>
+        </div>
+        <div class="card" data-tilt>
+          <h2 class="text-lg font-bold mb-4">Badges Earned</h2>
+          <p id="user-badges" class="text-xl font-bold mb-4"></p>
+          <div id="badges-list" class="space-y-2"></div>
+        </div>
+        <div class="card text-center" data-tilt>
+          <h2 class="text-lg font-bold mb-4">Member Spotlight</h2>
+          <img id="spotlight-pic" src="" alt="Spotlight" class="profile-pic mx-auto mb-4">
+          <p id="spotlight-username" class="font-bold"></p>
+          <p id="spotlight-status" class="text-sm text-yellow-300"></p>
+        </div>
+        <div class="card md:col-span-2" data-tilt>
+          <h2 class="text-lg font-bold mb-4">Latest Updates</h2>
+          <div id="updates-content" class="space-y-2">
+            <p>▪ LIONSGATE - New movie release: 'Legendary Tales' coming July 2025</p>
+            <p>▪ LIONSGATE - Fan event in LA scheduled for August 2025</p>
+            <p>▪ LIONSGATE - Exclusive merchandise now available for members</p>
+          </div>
+        </div>
+        <div class="card" data-tilt>
+          <h2 class="text-lg font-bold mb-4">Community Chat</h2>
+          <div id="chat-area" class="h-40 overflow-y-auto mb-4 p-2 border border-yellow-300 rounded">
+            <div id="chat-messages"></div>
+          </div>
+          <div class="flex gap-2">
+            <input id="chat-input" type="text" placeholder="Type message..." class="input flex-1">
+            <button onclick="sendMessage()" class="btn">Send</button>
+          </div>
+        </div>
+      </div>
+      <div class="text-center space-x-4">
+        <button onclick="showPage('profile-page')" class="btn">View Profile</button>
+        <button onclick="showPage('membership-page')" class="btn">Membership</button>
+        <button onclick="logout()" class="btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Page -->
+  <div id="profile-page" class="page hidden slide-enter-active">
+    <div class="container text-center">
+      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Your Profile</h1>
+      <div class="card max-w-md mx-auto" data-tilt>
+        <img id="profile-pic" src="" alt="Profile" class="profile-pic mx-auto mb-6">
+        <div class="space-y-3 text-left">
+          <p><strong>Username:</strong> <span id="profile-username"></span></p>
+          <p><strong>Email:</strong> <span id="profile-email"></span></p>
+          <p><strong>XP Points:</strong> <span id="profile-points"></span></p>
+          <p><strong>Status:</strong> <span id="profile-status"></span></p>
+          <p><strong>Access Code:</strong> <span id="profile-access-code" class="text-yellow-300 font-bold"></span></p>
+          <p><strong>Membership ID:</strong> <span id="profile-membership-id" class="text-yellow-300 font-bold"></span></p>
+        </div>
+        <div class="mt-6 space-y-4">
+          <input id="update-email" type="email" placeholder="Update Email" class="input">
+          <input id="update-pic" type="file" accept="image/*" class="input">
+          <button onclick="updateProfile()" class="btn w-full">Update Profile</button>
+        </div>
+      </div>
+      <button onclick="showPage('dashboard-page')" class="btn mt-6">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Membership Page -->
+  <div id="membership-page" class="page hidden slide-enter-active">
+    <div class="container text-center">
+      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Membership Upgrade</h1>
+      <div class="card max-w-md mx-auto" data-tilt>
+        <h2 class="text-lg mb-4">Upgrade to Elite Member</h2>
+        <p class="text-yellow-200 mb-4">Bitcoin Address:</p>
+        <p class="text-sm bg-gray-800 p-3 rounded mb-4 break-all">tb1qexampletestnetaddress123456789</p>
+        <div id="qr-code" class="mb-6 flex justify-center"></div>
+        <button onclick="simulatePayment()" class="btn w-full mb-4">Process Payment</button>
+        <p id="payment-feedback" class="text-yellow-200"></p>
+      </div>
+      <button onclick="showPage('dashboard-page')" class="btn mt-6">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Admin Login -->
+  <div id="admin-login" class="page hidden slide-enter-active">
+    <div class="container">
+      <div class="card max-w-md mx-auto text-center" data-tilt>
+        <h1 class="text-3xl font-bold mb-4 text-yellow-300">Admin Access</h1>
+        <div class="space-y-4">
+          <input id="admin-username" type="text" placeholder="Admin Username" value="admin" class="input">
+          <input id="admin-password" type="password" placeholder="Admin Password" class="input">
+          <button onclick="adminLogin()" class="btn w-full">Access Admin Panel</button>
+          <button onclick="showPage('welcome-page')" class="btn w-full">Back</button>
+        </div>
+        <p id="admin-feedback" class="text-red-400 mt-4"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-dashboard" class="page hidden slide-enter-active">
+    <div class="container">
+      <h1 class="text-3xl font-bold text-center mb-6 text-yellow-300">Lions Gate Admin Panel</h1>
+      <div class="card mb-6" data-tilt>
+        <h2 class="text-lg font-bold mb-4">User Management</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <input id="admin-create-username" type="text" placeholder="Username" class="input">
+          <input id="admin-create-email" type="email" placeholder="Email" class="input">
+          <input id="admin-create-pic" type="file" accept="image/*" class="input" required>
+          <select id="admin-create-status" class="input">
+            <option value="fan">Fan</option>
+            <option value="member">Elite Member</option>
+          </select>
+        </div>
+        <button onclick="createUser()" class="btn w-full">Create User & Send Invite</button>
+      </div>
+      <div class="card mb-6" data-tilt>
+        <h2 class="text-lg font-bold mb-4">Registered Users</h2>
+        <div id="users-list" class="space-y-4 max-h-80 overflow-y-auto"></div>
+      </div>
+      <div class="text-center space-x-4">
+        <button onclick="refreshUsersList()" class="btn">Refresh Users</button>
+        <button onclick="logout()" class="btn">Logout Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for User Creation Confirmation -->
+  <div id="create-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4 text-yellow-300">Confirm User Creation</h2>
+      <p id="modal-message"></p>
+      <div class="flex justify-end space-x-4 mt-4">
+        <button onclick="closeModal()" class="btn">Cancel</button>
+        <button id="confirm-create" class="btn bg-green-600">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Activity Log -->
+  <div id="activity-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4 text-yellow-300">Activity Log</h2>
+      <div id="activity-log" class="space-y-2 max-h-60 overflow-y-auto"></div>
+      <div class="flex justify-end mt-4">
+        <button onclick="closeActivityModal()" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Editing User Picture -->
+  <div id="edit-pic-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4 text-yellow-300">Update Profile Picture</h2>
+      <input id="edit-user-pic" type="file" accept="image/*" class="input mb-4">
+      <div class="flex justify-end space-x-4">
+        <button onclick="closeEditPicModal()" class="btn">Cancel</button>
+        <button id="confirm-edit-pic" class="btn bg-green-600">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let logoClicks = 0;
+    let isAdmin = false;
+    let users = JSON.parse(localStorage.getItem('lionsgate_users')) || [];
+    let notifications = JSON.parse(localStorage.getItem('lionsgate_notifications')) || [];
+
+    // Initialize default users
+    if (users.length === 0) {
+      users = [
+        { id: 'user-1', username: 'KeanuReeves', email: 'keanu@lionsgate.com', password: btoa('password123'), status: 'fan', approved: true, accessCode: 'LG-KR4321', membershipId: 'LGB-MID-987654', points: 250, badges: ['Welcome Badge', 'Silver Star', 'Gold Star'], pic: '', activity: [] },
+        { id: 'user-2', username: 'JessicaFan', email: 'jessica@lionsgate.com', password: btoa('password123'), status: 'fan', approved: false, accessCode: null, membershipId: null, points: 100, badges: ['Welcome Badge'], pic: '', activity: [] },
+        { id: 'user-3', username: 'AlexPro', email: 'alex@lionsgate.com', password: btoa('password123'), status: 'member', approved: true, accessCode: 'LG-AL5678', membershipId: 'LGB-MID-654321', points: 500, badges: ['Welcome Badge', 'Silver Star', 'Platinum', 'Diamond'], pic: '', activity: [] }
+      ];
+      saveUsers();
+    }
+
+    // Particle Background
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let particlesArray = [];
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 5 + 1;
+        this.speedX = Math.random() * 3 - 1.5;
+        this.speedY = Math.random() * 3 - 1.5;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.size > 0.2) this.size -= 0.1;
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+      }
+      draw() {
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.5)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    function initParticles() {
+      for (let i = 0; i < 100; i++) particlesArray.push(new Particle());
+    }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+        particlesArray[i].draw();
+        if (particlesArray[i].size <= 0.2) {
+          particlesArray.splice(i, 1);
+          i--;
+          particlesArray.push(new Particle());
+        }
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    initParticles();
+    animateParticles();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Theme Toggle
+    function toggleTheme() {
+      const body = document.body;
+      const toggleBtn = document.getElementById('theme-toggle');
+      if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        toggleBtn.textContent = '☀️';
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.classList.remove('light-theme');
+        body.classList.add('dark-theme');
+        toggleBtn.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') toggleTheme();
+
+    // Notifications
+    function addNotification(message) {
+      const timestamp = new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' });
+      notifications.push({ message, timestamp });
+      saveNotifications();
+      updateNotifications();
+    }
+    function saveNotifications() {
+      localStorage.setItem('lionsgate_notifications', JSON.stringify(notifications));
+    }
+    function updateNotifications() {
+      const countEl = document.getElementById('notification-count');
+      const listEl = document.getElementById('notification-list');
+      countEl.textContent = notifications.length;
+      listEl.innerHTML = notifications.map(n => `<div class="notification-item">${n.message} - ${n.timestamp}</div>`).join('');
+    }
+    function toggleNotifications() {
+      const listEl = document.getElementById('notification-list');
+      listEl.style.display = listEl.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Voice Feedback
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Session Persistence
+    const session = sessionStorage.getItem('lionsgate_session');
+    if (session) {
+      const { userId, isAdmin } = JSON.parse(session);
+      currentUser = users.find(u => u.id === userId);
+      isAdmin = !!isAdmin;
+      if (currentUser) {
+        updateDashboard();
+        showPage('dashboard-page');
+      } else if (isAdmin) {
+        showPage('admin-dashboard');
+      }
+    }
+
+    function saveUsers() { localStorage.setItem('lionsgate_users', JSON.stringify(users)); }
+    function generateAccessCode(username) { return `LG-${username.slice(0, 2).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`; }
+    function generateMembershipId() { return `LGB-MID-${Math.floor(100000 + Math.random() * 900000)}`; }
+    function logActivity(user, action) {
+      user.activity.push({ action, timestamp: new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' }) });
+      saveUsers();
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+      const page = document.getElementById(pageId);
+      page.classList.remove('hidden');
+      if (pageId === 'dashboard-page' && currentUser) {
+        updateDashboard();
+        document.getElementById('notification-bell').classList.remove('hidden');
+      } else if (pageId === 'membership-page') {
+        generateQRCode();
+        document.getElementById('notification-bell').classList.remove('hidden');
+      } else if (pageId === 'admin-dashboard') {
+        refreshUsersList();
+        document.getElementById('notification-bell').classList.add('hidden');
+      } else {
+        document.getElementById('notification-bell').classList.add('hidden');
+      }
+      VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 15, speed: 400, glare: true, "max-glare": 0.5 });
+    }
+
+    function toggleMenu() {
+      const navLinks = document.getElementById('nav-links');
+      navLinks.classList.toggle('hidden');
+    }
+
+    function logoClick() {
+      logoClicks++;
+      if (logoClicks >= 3) showPage('admin-login');
+    }
+
+    // Handle invitation link
+    function handleInvitationLink() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('userId');
+      if (userId) {
+        const user = users.find(u => u.id === userId);
+        if (user) {
+          currentUser = user;
+          if (!user.pic) {
+            document.getElementById('welcome-feedback').textContent = 'Profile picture not set. Contact admin to upload your image.';
+            return;
+          }
+          if (user.approved) {
+            logActivity(user, 'Logged in');
+            sessionStorage.setItem('lionsgate_session', JSON.stringify({ userId: user.id }));
+            updateIDCard();
+            updateDashboard();
+            showPage('dashboard-page');
+            addNotification(`Welcome back, ${user.username}!`);
+            speak(`Welcome back, ${user.username}, to Lions Gate Bureau`);
+          } else {
+            document.getElementById('user-pic').src = user.pic;
+            document.getElementById('user-welcome').textContent = `Welcome, ${user.username}!`;
+            showPage('auth-page');
+            speak(`Welcome, ${user.username}, please complete your biometric scan`);
+          }
+        } else {
+          document.getElementById('welcome-feedback').textContent = 'Invalid invitation link!';
+        }
+      } else {
+        speak('Welcome to Lions Gate Bureau. Please use your invitation link to proceed.');
+      }
+    }
+    handleInvitationLink();
+
+    function completeBiometric() {
+      document.getElementById('biometric-section').classList.add('hidden');
+      document.getElementById('code-section').classList.remove('hidden');
+    }
+
+    function verifyCode() {
+      const code = document.getElementById('auth-code').value.trim();
+      if (!code) {
+        document.getElementById('auth-feedback').textContent = 'Please enter a code.';
+        return;
+      }
+      if (code !== 'L-26031998') {
+        document.getElementById('auth-feedback').textContent = 'Invalid code! Contact support or pay $1150 for the correct code.';
+        return;
+      }
+      logActivity(currentUser, 'Completed authorization');
+      sessionStorage.setItem('lionsgate_session', JSON.stringify({ userId: currentUser.id }));
+      updateIDCard();
+      showPage('id-card-page');
+      speak('Authorization successful. Your ID card is ready.');
+    }
+
+    function updateIDCard() {
+      document.getElementById('card-pic').src = currentUser.pic;
+      document.getElementById('card-username').textContent = currentUser.username;
+      document.getElementById('card-email').textContent = currentUser.email;
+      document.getElementById('card-status').textContent = currentUser.status;
+      document.getElementById('card-access-code').textContent = currentUser.accessCode;
+      document.getElementById('card-membership-id').textContent = currentUser.membershipId || 'N/A';
+      const qrDiv = document.getElementById('card-qr');
+      qrDiv.innerHTML = '';
+      const profileUrl = `${window.location.origin}${window.location.pathname}?userId=${currentUser.id}`;
+      QRCode.toCanvas(profileUrl, { width: 100 }, (err, canvas) => {
+        if (!err) qrDiv.appendChild(canvas);
+      });
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById('id-card')).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `LionsGate_ID_${currentUser.username}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function updateDashboard() {
+      document.getElementById('dashboard-welcome').textContent = `Welcome, ${currentUser.username}!`;
+      document.getElementById('user-points').textContent = currentUser.points;
+      document.getElementById('user-badges').textContent = currentUser.badges.length;
+      document.getElementById('profile-pic').src = currentUser.pic;
+      document.getElementById('profile-username').textContent = currentUser.username;
+      document.getElementById('profile-email').textContent = currentUser.email;
+      document.getElementById('update-email').value = currentUser.email;
+      document.getElementById('profile-points').textContent = currentUser.points;
+      document.getElementById('profile-status').textContent = currentUser.status;
+      document.getElementById('profile-access-code').textContent = currentUser.accessCode;
+      document.getElementById('profile-membership-id').textContent = currentUser.membershipId || 'N/A';
+
+      const badgesList = document.getElementById('badges-list');
+      badgesList.innerHTML = currentUser.badges.map(badge => `<p>🏆 ${badge}</p>`).join('');
+      updateXPBar();
+      updateChat();
+      updateSpotlight();
+    }
+
+    function updateSpotlight() {
+      const approvedUsers = users.filter(u => u.approved && u.pic);
+      if (approvedUsers.length > 0) {
+        const randomUser = approvedUsers[Math.floor(Math.random() * approvedUsers.length)];
+        document.getElementById('spotlight-pic').src = randomUser.pic;
+        document.getElementById('spotlight-username').textContent = randomUser.username;
+        document.getElementById('spotlight-status').textContent = randomUser.status;
+      }
+    }
+
+    function updateXPBar() {
+      const bar = document.getElementById('xp-bar');
+      const progress = Math.min(currentUser.points / 1000, 1);
+      bar.style.width = `${progress * 100}%`;
+    }
+
+    function updateChat() {
+      const chatMessages = document.getElementById('chat-messages');
+      chatMessages.innerHTML = `
+        <div class="mb-2">Jessica: I met Keanu at the last event!</div>
+        <div class="mb-2">Alex: How do I upgrade my membership?</div>
+        <div class="mb-2">Evan: Keanu's charity work is amazing!</div>
+      `;
+    }
+
+    function earnReward() {
+      currentUser.points += 50;
+      const badgeThresholds = [
+        { points: 100, name: 'Bronze Star' },
+        { points: 250, name: 'Silver Star' },
+        { points: 500, name: 'Gold Star' },
+        { points: 750, name: 'Platinum' },
+        { points: 1000, name: 'Diamond' }
+      ];
+      badgeThresholds.forEach(badge => {
+        if (currentUser.points >= badge.points && !currentUser.badges.includes(badge.name)) {
+          currentUser.badges.push(badge.name);
+          addNotification(`You earned the ${badge.name} badge!`);
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          speak(`Congratulations, ${currentUser.username}! You earned the ${badge.name} badge!`);
+        }
+      });
+      logActivity(currentUser, 'Earned 50 XP');
+      const userIndex = users.findIndex(u => u.id === currentUser.id);
+      users[userIndex] = currentUser;
+      saveUsers();
+      updateDashboard();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      if (!input.value.trim()) return;
+      const chatMessages = document.getElementById('chat-messages');
+      const message = document.createElement('div');
+      message.textContent = `${currentUser.username}: ${input.value}`;
+      message.className = 'mb-2';
+      chatMessages.appendChild(message);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      input.value = '';
+      logActivity(currentUser, 'Sent a chat message');
+      setTimeout(() => {
+        const aiResponse = document.createElement('div');
+        aiResponse.textContent = `Lions Gate AI: Thank you, ${currentUser.username}! Keep engaging!`;
+        aiResponse.className = 'mb-2 text-yellow-300';
+        chatMessages.appendChild(aiResponse);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 1000);
+    }
+
+    function generateQRCode() {
+      const qrDiv = document.getElementById('qr-code');
+      qrDiv.innerHTML = '';
+      QRCode.toCanvas('tb1qexampletestnetaddress123456789', { width: 200 }, (err, canvas) => {
+        if (!err) qrDiv.appendChild(canvas);
+      });
+    }
+
+    function simulatePayment() {
+      const feedback = document.getElementById('payment-feedback');
+      feedback.textContent = 'Processing payment...';
+      setTimeout(() => {
+        currentUser.status = 'member';
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+        users[userIndex] = currentUser;
+        saveUsers();
+        feedback.textContent = 'Payment successful! Welcome to Elite Membership!';
+        logActivity(currentUser, 'Upgraded to Elite Membership');
+        addNotification('You are now an Elite Member!');
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+        speak('Payment successful! Welcome to Elite Membership!');
+        updateDashboard();
+      }, 2000);
+    }
+
+    function updateProfile() {
+      const newEmail = document.getElementById('update-email').value.trim();
+      const newPic = document.getElementById('update-pic').files[0];
+      let updated = false;
+
+      if (newEmail && newEmail !== currentUser.email) {
+        if (users.find(u => u.email === newEmail && u.id !== currentUser.id)) {
+          alert('Email already in use by another user!');
+          return;
+        }
+        currentUser.email = newEmail;
+        updated = true;
+        logActivity(currentUser, 'Updated email');
+        addNotification('Your email has been updated.');
+      }
+
+      if (newPic) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          currentUser.pic = e.target.result;
+          const userIndex = users.findIndex(u => u.id === currentUser.id);
+          users[userIndex] = currentUser;
+          saveUsers();
+          logActivity(currentUser, 'Updated profile picture');
+          addNotification('Your profile picture has been updated.');
+          updateDashboard();
+          speak('Profile picture updated successfully.');
+        };
+        reader.readAsDataURL(newPic);
+        updated = true;
+      }
+
+      if (updated) {
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+        users[userIndex] = currentUser;
+        saveUsers();
+        updateDashboard();
+      } else {
+        alert('No changes to update.');
+      }
+    }
+
+    function adminLogin() {
+      const username = document.getElementById('admin-username').value.trim();
+      const password = document.getElementById('admin-password').value;
+      if (!username || !password) {
+        document.getElementById('admin-feedback').textContent = 'Please fill in all fields.';
+        return;
+      }
+      if (username === 'admin' && password === 'admin111') {
+        isAdmin = true;
+        sessionStorage.setItem('lionsgate_session', JSON.stringify({ isAdmin: true }));
+        showPage('admin-dashboard');
+        document.getElementById('admin-feedback').textContent = '';
+        speak('Admin access granted.');
+      } else {
+        document.getElementById('admin-feedback').textContent = 'Invalid credentials!';
+      }
+    }
+
+    let editingUserIndex = null;
+    function createUser() {
+      const username = document.getElementById('admin-create-username').value.trim();
+      const email = document.getElementById('admin-create-email').value.trim();
+      const picFile = document.getElementById('admin-create-pic').files[0];
+      const status = document.getElementById('admin-create-status').value;
+
+      if (!username || !email || !picFile) {
+        alert('Username, email, and profile picture are required!');
+        return;
+      }
+      if (users.find(u => u.email === email || u.username === username)) {
+        alert('Email or username already exists!');
+        return;
+      }
+
+      const userId = `user-${Date.now()}`;
+      const inviteLink = `${window.location.origin}${window.location.pathname}?userId=${userId}`;
+      const modal = document.getElementById('create-modal');
+      document.getElementById('modal-message').textContent = `Create user '${username}' with email '${email}'? Invitation link: <a href="${inviteLink}" target="_blank" class="text-yellow-300">${inviteLink}</a>`;
+      modal.style.display = 'block';
+
+      document.getElementById('confirm-create').onclick = () => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const newUser = { id: userId, username, email, password: btoa('password123'), status, approved: false, accessCode: null, membershipId: null, points: 0, badges: ['Welcome Badge'], pic: e.target.result, activity: [] };
+          users.push(newUser);
+          saveUsers();
+          refreshUsersList();
+          alert(`User created! Invitation link sent: ${inviteLink}`);
+          closeModal();
+          document.getElementById('admin-create-username').value = '';
+          document.getElementById('admin-create-email').value = '';
+          document.getElementById('admin-create-pic').value = '';
+        };
+        reader.readAsDataURL(picFile);
+      };
+    }
+
+    function refreshUsersList() {
+      const usersList = document.getElementById('users-list');
+      usersList.innerHTML = users.map((user, index) => `
+        <div class="card p-4 flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            ${user.pic ? `<img src="${user.pic}" alt="Profile" class="w-10 h-10 rounded-full border-2 border-yellow-300" loading="lazy">` : '<div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white">N/A</div>'}
+            <div>
+              <h3 class="font-bold">${user.username}</h3>
+              <p class="text-sm">${user.email}</p>
+              <p class="text-sm">Status: ${user.status} | XP: ${user.points}</p>
+              <p class="text-sm">Approved: ${user.approved ? 'Yes' : 'No'}</p>
+              ${user.accessCode ? `<p class="text-sm text-yellow-300">Access Code: ${user.accessCode}</p>` : ''}
+              ${user.membershipId ? `<p class="text-sm text-yellow-300">Membership ID: ${user.membershipId}</p>` : ''}
+            </div>
+          </div>
+          <div class="space-x-2 flex flex-wrap gap-2">
+            <button onclick="toggleApproval(${index})" class="btn text-sm">${user.approved ? 'Revoke' : 'Approve'}</button>
+            <button onclick="editUserPic(${index})" class="btn text-sm bg-blue-600">Edit Picture</button>
+            <button onclick="viewActivity(${index})" class="btn text-sm bg-purple-600">Activity</button>
+            <button onclick="deleteUser(${index})" class="btn text-sm bg-red-600">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function editUserPic(index) {
+      editingUserIndex = index;
+      document.getElementById('edit-pic-modal').style.display = 'block';
+      document.getElementById('confirm-edit-pic').onclick = () => {
+        const newPic = document.getElementById('edit-user-pic').files[0];
+        if (!newPic) {
+          alert('Please select an image to update.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          users[index].pic = e.target.result;
+          saveUsers();
+          refreshUsersList();
+          closeEditPicModal();
+        };
+        reader.readAsDataURL(newPic);
+      };
+    }
+
+    function viewActivity(index) {
+      const user = users[index];
+      const logEl = document.getElementById('activity-log');
+      logEl.innerHTML = user.activity.length > 0
+        ? user.activity.map(a => `<p>${a.action} - ${a.timestamp}</p>`).join('')
+        : '<p>No activity recorded.</p>';
+      document.getElementById('activity-modal').style.display = 'block';
+    }
+
+    function toggleApproval(index) {
+      users[index].approved = !users[index].approved;
+      if (users[index].approved) {
+        if (!users[index].accessCode) users[index].accessCode = generateAccessCode(users[index].username);
+        if (!users[index].membershipId) users[index].membershipId = generateMembershipId();
+      } else {
+        users[index].accessCode = null;
+        users[index].membershipId = null;
+      }
+      logActivity(users[index], users[index].approved ? 'Approved by admin' : 'Approval revoked by admin');
+      saveUsers();
+      refreshUsersList();
+    }
+
+    function deleteUser(index) {
+      if (confirm('Are you sure you want to delete this user?')) {
+        if (currentUser && currentUser.id === users[index].id) logout();
+        users.splice(index, 1);
+        saveUsers();
+        refreshUsersList();
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      isAdmin = false;
+      sessionStorage.removeItem('lionsgate_session');
+      document.getElementById('nav-links').classList.add('hidden');
+      showPage('welcome-page');
+      speak('You have been logged out.');
+    }
+
+    function closeModal() {
+      document.getElementById('create-modal').style.display = 'none';
+    }
+
+    function closeActivityModal() {
+      document.getElementById('activity-modal').style.display = 'none';
+    }
+
+    function closeEditPicModal() {
+      document.getElementById('edit-pic-modal').style.display = 'none';
+      document.getElementById('edit-user-pic').value = '';
+      editingUserIndex = null;
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('chat-input').addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
+      document.getElementById('auth-code').addEventListener('keypress', (e) => e.key === 'Enter' && verifyCode());
+      document.getElementById('admin-password').addEventListener('keypress', (e) => e.key === 'Enter' && adminLogin());
+      if (currentUser) updateDashboard();
+      VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 15, speed: 400, glare: true, "max-glare": 0.5 });
+    });
+
+    window.logoClick = logoClick;
+    window.completeBiometric = completeBiometric;
+    window.verifyCode = verifyCode;
+    window.downloadCard = downloadCard;
+    window.showPage = showPage;
+    window.earnReward = earnReward;
+    window.sendMessage = sendMessage;
+    window.simulatePayment = simulatePayment;
+    window.adminLogin = adminLogin;
+    window.createUser = createUser;
+    window.refreshUsersList = refreshUsersList;
+    window.toggleApproval = toggleApproval;
+    window.deleteUser = deleteUser;
+    window.logout = logout;
+    window.closeModal = closeModal;
+    window.toggleMenu = toggleMenu;
+    window.toggleTheme = toggleTheme;
+    window.toggleNotifications = toggleNotifications;
+    window.updateProfile = updateProfile;
+    window.viewActivity = viewActivity;
+    window.editUserPic = editUserPic;
+    window.closeActivityModal = closeActivityModal;
+    window.closeEditPicModal = closeEditPicModal;
+  </script>
+</body>
+</html>
