@@ -9,92 +9,112 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Montserrat', Arial, sans-serif; }
+    * { font-family: 'Inter', Arial, sans-serif; }
     body { margin: 0; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
     .light-theme { background: linear-gradient(135deg, #f5f7fa, #c3cfe2); color: #333; }
-    .dark-theme { background: linear-gradient(135deg, #1f2a44, #2d3e63); color: #ffffff; }
+    .dark-theme { background: linear-gradient(135deg, #1a0b2e, #2c1b47); color: #ffffff; }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); padding: 20px; transition: transform 0.3s; }
-    .card:hover { transform: translateY(-5px); }
-    .btn { background: linear-gradient(90deg, #d4af37, #b89729); color: #fff; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.2s; }
-    .btn:hover { background: linear-gradient(90deg, #e6c84b, #d4af37); transform: scale(1.05); }
-    .btn:disabled { background: #4a5e7d; cursor: not-allowed; }
-    .input { background: rgba(255, 255, 255, 0.15); border: 1px solid #d4af37; color: inherit; padding: 10px; border-radius: 6px; width: 100%; transition: border-color 0.3s; }
-    .input:focus { border-color: #b89729; outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.5); }
+    .card { background: rgba(34, 26, 51, 0.9); border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); padding: 20px; transition: opacity 0.3s ease-in-out, transform 0.3s; opacity: 0; }
+    .card.visible { opacity: 1; }
+    .card:hover { transform: translateY(-3px); }
+    .btn { background: linear-gradient(90deg, #FF6B35, #FF8E53); color: #fff; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.2s; }
+    .btn:hover { background: linear-gradient(90deg, #FF8E53, #FF6B35); transform: scale(1.05); }
+    .btn:disabled { background: #4a3e7d; cursor: not-allowed; }
+    .input { background: rgba(255, 255, 255, 0.1); border: 1px solid #4a3e7d; color: #fff; padding: 10px; border-radius: 6px; width: 100%; transition: border-color 0.3s; }
+    .input:focus { border-color: #FF6B35; outline: none; box-shadow: 0 0 5px rgba(255, 107, 53, 0.5); }
     .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
     .fade-enter, .fade-leave-to { opacity: 0; }
     .slide-enter-active, .slide-leave-active { transition: transform 0.3s; }
     .slide-enter { transform: translateX(100%); }
     .slide-leave-to { transform: translateX(-100%); }
     .hidden { display: none; }
-    .profile-pic { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #d4af37; }
-    #xp-bar-container { position: relative; height: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; }
-    #xp-bar { height: 100%; background: linear-gradient(90deg, #d4af37, #b89729); transition: width 0.5s ease-in-out; }
+    .profile-pic { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #FF6B35; }
+    .small-pic { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 2px solid #FF6B35; }
+    #xp-bar-container { position: relative; height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden; }
+    #xp-bar { height: 100%; background: linear-gradient(90deg, #FF6B35, #FF8E53); transition: width 0.5s ease-in-out; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 50; }
-    .modal-content { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); margin: 10% auto; padding: 20px; border-radius: 12px; max-width: 500px; }
+    .modal-content { background: rgba(34, 26, 51, 0.9); margin: 10% auto; padding: 20px; border-radius: 12px; max-width: 500px; }
     .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
     .notification-bell { position: relative; cursor: pointer; }
-    .notification-count { position: absolute; top: -5px; right: -5px; background: #ff4444; color: #fff; font-size: 12px; border-radius: 50%; padding: 2px 6px; }
-    .notification-list { position: absolute; top: 40px; right: 0; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 8px; width: 300px; max-height: 400px; overflow-y: auto; z-index: 10; display: none; }
+    .notification-count { position: absolute; top: -5px; right: -5px; background: #FF6B35; color: #fff; font-size: 12px; border-radius: 50%; padding: 2px 6px; }
+    .notification-list { position: absolute; top: 40px; right: 0; background: rgba(34, 26, 51, 0.9); border-radius: 8px; width: 300px; max-height: 400px; overflow-y: auto; z-index: 10; display: none; }
     .notification-item { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
-    .id-card { background: url('https://via.placeholder.com/300x200?text=Lion+Watermark') no-repeat center; background-size: cover; background-blend-mode: overlay; background-color: rgba(45, 62, 99, 0.9); }
+    .id-card { background: url('https://via.placeholder.com/300x200?text=Lion+Watermark') no-repeat center; background-size: cover; background-blend-mode: overlay; background-color: rgba(34, 26, 51, 0.9); }
+    .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: rgba(26, 11, 46, 0.95); z-index: 40; transition: left 0.3s; }
+    .sidebar.open { left: 0; }
+    .sidebar-link { display: flex; align-items: center; padding: 12px 20px; color: #fff; font-weight: 500; }
+    .sidebar-link:hover { background: rgba(255, 107, 53, 0.2); }
+    .content-area { margin-left: 0; transition: margin-left 0.3s; }
+    @media (min-width: 768px) {
+      .sidebar { left: 0; }
+      .content-area { margin-left: 250px; }
+    }
+    @media (max-width: 767px) {
+      .card { margin-bottom: 15px; }
+    }
   </style>
 </head>
 <body class="dark-theme">
   <!-- Particle Background -->
   <canvas id="particles" class="particles"></canvas>
 
-  <!-- Navigation Bar -->
+  <!-- Sidebar Navigation -->
+  <div id="sidebar" class="sidebar">
+    <div class="p-4 flex items-center space-x-3 border-b border-gray-700">
+      <img src="lionsgate-logo.png" alt="Lions Gate Logo" class="w-10 h-10">
+      <h2 class="text-lg font-bold">Lions Gate Bureau</h2>
+    </div>
+    <a href="#" class="sidebar-link" onclick="showPage('dashboard-page'); closeSidebar(); return false;"><span class="mr-3">🏠</span> Home</a>
+    <a href="#" class="sidebar-link" onclick="showPage('profile-page'); closeSidebar(); return false;"><span class="mr-3">👤</span> Profile</a>
+    <a href="#" class="sidebar-link" onclick="showPage('membership-page'); closeSidebar(); return false;"><span class="mr-3">🎟️</span> Membership</a>
+    <a href="#" class="sidebar-link" onclick="showLogoutModal(); closeSidebar(); return false;"><span class="mr-3">🚪</span> Logout</a>
+  </div>
+
+  <!-- Top Navigation Bar -->
   <nav class="bg-gray-900 p-4 shadow-lg sticky top-0 z-40">
     <div class="container flex justify-between items-center">
       <div class="flex items-center space-x-4">
-        <img src="lionsgate-logo.png" alt="Lions Gate Logo" class="w-12 h-12 cursor-pointer" onclick="logoClick()">
-        <h2 class="text-xl font-bold">Lions Gate Bureau</h2>
+        <button id="sidebar-toggle" class="md:hidden text-white focus:outline-none" onclick="toggleSidebar()">☰</button>
+        <img src="lionsgate-logo.png" alt="Lions Gate Logo" class="w-10 h-10 cursor-pointer hidden md:block" onclick="logoClick()">
+        <h2 class="text-lg font-bold hidden md:block">Lions Gate Bureau</h2>
       </div>
       <div class="flex items-center space-x-4">
-        <button id="theme-toggle" class="text-2xl" onclick="toggleTheme()" aria-label="Toggle Theme">🌙</button>
+        <button id="theme-toggle" class="text-xl" onclick="toggleTheme()" aria-label="Toggle Theme">🌙</button>
         <div id="notification-bell" class="notification-bell hidden" onclick="toggleNotifications()">
           🔔 <span id="notification-count" class="notification-count">0</span>
           <div id="notification-list" class="notification-list"></div>
         </div>
-        <div id="nav-links" class="space-x-4 hidden md:flex">
-          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('dashboard-page'); return false;">Dashboard</a>
-          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('profile-page'); return false;">Profile</a>
-          <a href="#" class="text-white hover:text-yellow-300" onclick="showPage('membership-page'); return false;">Membership</a>
-          <a href="#" class="text-white hover:text-yellow-300" onclick="logout(); return false;">Logout</a>
-        </div>
-        <button id="menu-toggle" class="md:hidden text-white focus:outline-none" onclick="toggleMenu()">☰</button>
       </div>
     </div>
   </nav>
 
   <!-- Welcome Screen -->
-  <div id="welcome-page" class="page active fade-enter-active">
+  <div id="welcome-page" class="page active fade-enter-active content-area">
     <div class="container text-center">
-      <h1 class="text-5xl font-bold mb-6 text-yellow-300">Welcome to Lions Gate Bureau</h1>
+      <h1 class="text-5xl font-bold mb-6 text-white">Welcome to Lions Gate Bureau</h1>
       <p class="text-xl mb-6">"Where Legends Meet Loyalty"</p>
-      <p class="text-yellow-200 mb-4">Please use your invitation link provided by an administrator to access the portal.</p>
+      <p class="text-gray-300 mb-4">Please use your invitation link provided by an administrator to access the portal.</p>
       <p id="welcome-feedback" class="text-red-400 mt-4"></p>
     </div>
   </div>
 
   <!-- Authorization Page -->
-  <div id="auth-page" class="page hidden slide-enter-active">
+  <div id="auth-page" class="page hidden slide-enter-active content-area">
     <div class="container">
-      <div class="card text-center" data-tilt>
-        <h1 class="text-3xl font-bold mb-4 text-yellow-300">Authorize Access</h1>
+      <div class="card text-center">
+        <h1 class="text-3xl font-bold mb-4">Authorize Access</h1>
         <div id="biometric-section">
           <img id="user-pic" src="" alt="User" class="profile-pic mx-auto mb-4">
           <h2 id="user-welcome" class="text-lg mb-4"></h2>
-          <p class="text-yellow-200 mb-4">Biometric verification in progress...</p>
+          <p class="text-gray-300 mb-4">Biometric verification in progress...</p>
           <button onclick="completeBiometric()" class="btn mb-4">Complete Scan</button>
         </div>
         <div id="code-section" class="hidden">
           <h2 class="text-lg mb-4">Scan Complete!</h2>
-          <p class="text-yellow-200 mb-4">Enter authorization code ($1150 fee required)</p>
-          <p class="text-sm text-yellow-300 mb-4">(Demo Code: L-26031998)</p>
+          <p class="text-gray-300 mb-4">Enter authorization code ($1150 fee required)</p>
+          <p class="text-sm text-gray-400 mb-4">(Demo Code: L-26031998)</p>
           <input id="auth-code" type="text" placeholder="Enter code" class="input mb-4 text-center">
           <button onclick="verifyCode()" class="btn w-full">Verify</button>
         </div>
@@ -104,18 +124,18 @@
   </div>
 
   <!-- ID Card Page -->
-  <div id="id-card-page" class="page hidden slide-enter-active">
+  <div id="id-card-page" class="page hidden slide-enter-active content-area">
     <div class="container text-center">
-      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Your Elite Membership ID Card</h1>
-      <div id="id-card" class="card id-card max-w-sm mx-auto mb-6" data-tilt>
+      <h1 class="text-3xl font-bold mb-6">Your Elite Membership ID Card</h1>
+      <div id="id-card" class="card id-card max-w-sm mx-auto mb-6">
         <h2 class="text-lg font-bold mb-4">Lions Gate Bureau</h2>
         <img id="card-pic" src="" alt="Profile" class="profile-pic mx-auto mb-4">
         <div class="space-y-2 text-left">
           <p><strong>Name:</strong> <span id="card-username"></span></p>
           <p><strong>Email:</strong> <span id="card-email"></span></p>
           <p><strong>Status:</strong> <span id="card-status"></span></p>
-          <p class="text-center"><strong>Access Code:</strong> <span id="card-access-code" class="text-yellow-300 font-bold"></span></p>
-          <p class="text-center"><strong>Membership ID:</strong> <span id="card-membership-id" class="text-yellow-300 font-bold"></span></p>
+          <p class="text-center"><strong>Access Code:</strong> <span id="card-access-code" class="text-orange-400 font-bold"></span></p>
+          <p class="text-center"><strong>Membership ID:</strong> <span id="card-membership-id" class="text-orange-400 font-bold"></span></p>
         </div>
         <div id="card-qr" class="mt-4 flex justify-center"></div>
       </div>
@@ -127,11 +147,23 @@
   </div>
 
   <!-- Dashboard Page -->
-  <div id="dashboard-page" class="page hidden slide-enter-active">
+  <div id="dashboard-page" class="page hidden slide-enter-active content-area">
     <div class="container">
-      <h1 id="dashboard-welcome" class="text-3xl font-bold text-center mb-6 text-yellow-300"></h1>
+      <!-- Header -->
+      <div class="mb-6 flex items-center space-x-4">
+        <img id="dashboard-pic" src="" alt="Profile" class="small-pic">
+        <div>
+          <h1 id="dashboard-welcome" class="text-xl font-bold"></h1>
+          <p id="dashboard-status" class="text-sm text-green-400"></p>
+          <p id="live-clock" class="text-sm text-gray-400"></p>
+        </div>
+        <button onclick="refreshData()" class="btn ml-auto">Refresh Data</button>
+      </div>
+
+      <!-- Grid Layout -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="card" data-tilt>
+        <!-- XP Card -->
+        <div class="card">
           <h2 class="text-lg font-bold mb-4">Experience Points</h2>
           <p id="user-points" class="text-xl font-bold mb-4"></p>
           <div id="xp-bar-container" class="mb-4">
@@ -139,28 +171,42 @@
           </div>
           <button onclick="earnReward()" class="btn w-full">Earn Reward (50 XP)</button>
         </div>
-        <div class="card" data-tilt>
+
+        <!-- Badges Card -->
+        <div class="card">
           <h2 class="text-lg font-bold mb-4">Badges Earned</h2>
           <p id="user-badges" class="text-xl font-bold mb-4"></p>
           <div id="badges-list" class="space-y-2"></div>
         </div>
-        <div class="card text-center" data-tilt>
+
+        <!-- Member Spotlight -->
+        <div class="card text-center">
           <h2 class="text-lg font-bold mb-4">Member Spotlight</h2>
           <img id="spotlight-pic" src="" alt="Spotlight" class="profile-pic mx-auto mb-4">
           <p id="spotlight-username" class="font-bold"></p>
-          <p id="spotlight-status" class="text-sm text-yellow-300"></p>
+          <p id="spotlight-status" class="text-sm text-green-400"></p>
         </div>
-        <div class="card md:col-span-2" data-tilt>
-          <h2 class="text-lg font-bold mb-4">Latest Updates</h2>
-          <div id="updates-content" class="space-y-2">
-            <p>▪ LIONSGATE - New movie release: 'Legendary Tales' coming July 2025</p>
-            <p>▪ LIONSGATE - Fan event in LA scheduled for August 2025</p>
-            <p>▪ LIONSGATE - Exclusive merchandise now available for members</p>
+
+        <!-- Today’s Events Card -->
+        <div class="card md:col-span-2">
+          <h2 class="text-lg font-bold mb-4">Today’s Events (June 06, 2025)</h2>
+          <div id="events-content" class="space-y-2">
+            <p>▪ 2:00 PM WAT - Live Q&A with Keanu Reeves</p>
+            <p>▪ 5:00 PM WAT - Exclusive Fan Screening of 'Legendary Tales'</p>
+            <p>▪ 8:00 PM WAT - Virtual Meet & Greet for Elite Members</p>
           </div>
         </div>
-        <div class="card" data-tilt>
+
+        <!-- Recent Activity Card -->
+        <div class="card">
+          <h2 class="text-lg font-bold mb-4">Recent Activity</h2>
+          <div id="recent-activity" class="space-y-2 max-h-40 overflow-y-auto"></div>
+        </div>
+
+        <!-- Chat Card -->
+        <div class="card">
           <h2 class="text-lg font-bold mb-4">Community Chat</h2>
-          <div id="chat-area" class="h-40 overflow-y-auto mb-4 p-2 border border-yellow-300 rounded">
+          <div id="chat-area" class="h-40 overflow-y-auto mb-4 p-2 border border-gray-600 rounded">
             <div id="chat-messages"></div>
           </div>
           <div class="flex gap-2">
@@ -169,27 +215,22 @@
           </div>
         </div>
       </div>
-      <div class="text-center space-x-4">
-        <button onclick="showPage('profile-page')" class="btn">View Profile</button>
-        <button onclick="showPage('membership-page')" class="btn">Membership</button>
-        <button onclick="logout()" class="btn">Logout</button>
-      </div>
     </div>
   </div>
 
   <!-- Profile Page -->
-  <div id="profile-page" class="page hidden slide-enter-active">
+  <div id="profile-page" class="page hidden slide-enter-active content-area">
     <div class="container text-center">
-      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Your Profile</h1>
-      <div class="card max-w-md mx-auto" data-tilt>
+      <h1 class="text-3xl font-bold mb-6">Your Profile</h1>
+      <div class="card max-w-md mx-auto">
         <img id="profile-pic" src="" alt="Profile" class="profile-pic mx-auto mb-6">
         <div class="space-y-3 text-left">
           <p><strong>Username:</strong> <span id="profile-username"></span></p>
           <p><strong>Email:</strong> <span id="profile-email"></span></p>
           <p><strong>XP Points:</strong> <span id="profile-points"></span></p>
           <p><strong>Status:</strong> <span id="profile-status"></span></p>
-          <p><strong>Access Code:</strong> <span id="profile-access-code" class="text-yellow-300 font-bold"></span></p>
-          <p><strong>Membership ID:</strong> <span id="profile-membership-id" class="text-yellow-300 font-bold"></span></p>
+          <p><strong>Access Code:</strong> <span id="profile-access-code" class="text-orange-400 font-bold"></span></p>
+          <p><strong>Membership ID:</strong> <span id="profile-membership-id" class="text-orange-400 font-bold"></span></p>
         </div>
         <div class="mt-6 space-y-4">
           <input id="update-email" type="email" placeholder="Update Email" class="input">
@@ -202,26 +243,26 @@
   </div>
 
   <!-- Membership Page -->
-  <div id="membership-page" class="page hidden slide-enter-active">
+  <div id="membership-page" class="page hidden slide-enter-active content-area">
     <div class="container text-center">
-      <h1 class="text-3xl font-bold mb-6 text-yellow-300">Membership Upgrade</h1>
-      <div class="card max-w-md mx-auto" data-tilt>
+      <h1 class="text-3xl font-bold mb-6">Membership Upgrade</h1>
+      <div class="card max-w-md mx-auto">
         <h2 class="text-lg mb-4">Upgrade to Elite Member</h2>
-        <p class="text-yellow-200 mb-4">Bitcoin Address:</p>
+        <p class="text-gray-300 mb-4">Bitcoin Address:</p>
         <p class="text-sm bg-gray-800 p-3 rounded mb-4 break-all">tb1qexampletestnetaddress123456789</p>
         <div id="qr-code" class="mb-6 flex justify-center"></div>
         <button onclick="simulatePayment()" class="btn w-full mb-4">Process Payment</button>
-        <p id="payment-feedback" class="text-yellow-200"></p>
+        <p id="payment-feedback" class="text-gray-300"></p>
       </div>
       <button onclick="showPage('dashboard-page')" class="btn mt-6">Back to Dashboard</button>
     </div>
   </div>
 
   <!-- Admin Login -->
-  <div id="admin-login" class="page hidden slide-enter-active">
+  <div id="admin-login" class="page hidden slide-enter-active content-area">
     <div class="container">
-      <div class="card max-w-md mx-auto text-center" data-tilt>
-        <h1 class="text-3xl font-bold mb-4 text-yellow-300">Admin Access</h1>
+      <div class="card max-w-md mx-auto text-center">
+        <h1 class="text-3xl font-bold mb-4">Admin Access</h1>
         <div class="space-y-4">
           <input id="admin-username" type="text" placeholder="Admin Username" value="admin" class="input">
           <input id="admin-password" type="password" placeholder="Admin Password" class="input">
@@ -234,10 +275,10 @@
   </div>
 
   <!-- Admin Dashboard -->
-  <div id="admin-dashboard" class="page hidden slide-enter-active">
+  <div id="admin-dashboard" class="page hidden slide-enter-active content-area">
     <div class="container">
-      <h1 class="text-3xl font-bold text-center mb-6 text-yellow-300">Lions Gate Admin Panel</h1>
-      <div class="card mb-6" data-tilt>
+      <h1 class="text-3xl font-bold text-center mb-6">Lions Gate Admin Panel</h1>
+      <div class="card mb-6">
         <h2 class="text-lg font-bold mb-4">User Management</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input id="admin-create-username" type="text" placeholder="Username" class="input">
@@ -250,7 +291,7 @@
         </div>
         <button onclick="createUser()" class="btn w-full">Create User & Send Invite</button>
       </div>
-      <div class="card mb-6" data-tilt>
+      <div class="card mb-6">
         <h2 class="text-lg font-bold mb-4">Registered Users</h2>
         <div id="users-list" class="space-y-4 max-h-80 overflow-y-auto"></div>
       </div>
@@ -264,7 +305,7 @@
   <!-- Modal for User Creation Confirmation -->
   <div id="create-modal" class="modal">
     <div class="modal-content">
-      <h2 class="text-lg font-bold mb-4 text-yellow-300">Confirm User Creation</h2>
+      <h2 class="text-lg font-bold mb-4">Confirm User Creation</h2>
       <p id="modal-message"></p>
       <div class="flex justify-end space-x-4 mt-4">
         <button onclick="closeModal()" class="btn">Cancel</button>
@@ -276,7 +317,7 @@
   <!-- Modal for Activity Log -->
   <div id="activity-modal" class="modal">
     <div class="modal-content">
-      <h2 class="text-lg font-bold mb-4 text-yellow-300">Activity Log</h2>
+      <h2 class="text-lg font-bold mb-4">Activity Log</h2>
       <div id="activity-log" class="space-y-2 max-h-60 overflow-y-auto"></div>
       <div class="flex justify-end mt-4">
         <button onclick="closeActivityModal()" class="btn">Close</button>
@@ -287,11 +328,23 @@
   <!-- Modal for Editing User Picture -->
   <div id="edit-pic-modal" class="modal">
     <div class="modal-content">
-      <h2 class="text-lg font-bold mb-4 text-yellow-300">Update Profile Picture</h2>
+      <h2 class="text-lg font-bold mb-4">Update Profile Picture</h2>
       <input id="edit-user-pic" type="file" accept="image/*" class="input mb-4">
       <div class="flex justify-end space-x-4">
         <button onclick="closeEditPicModal()" class="btn">Cancel</button>
         <button id="confirm-edit-pic" class="btn bg-green-600">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Logout Confirmation -->
+  <div id="logout-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Confirm Logout</h2>
+      <p>Are you sure you want to log out?</p>
+      <div class="flex justify-end space-x-4 mt-4">
+        <button onclick="closeLogoutModal()" class="btn">Cancel</button>
+        <button id="confirm-logout" class="btn bg-red-600">Logout</button>
       </div>
     </div>
   </div>
@@ -335,7 +388,7 @@
         if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
       }
       draw() {
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.5)';
+        ctx.fillStyle = 'rgba(255, 107, 53, 0.5)';
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -404,6 +457,25 @@
       listEl.style.display = listEl.style.display === 'block' ? 'none' : 'block';
     }
 
+    // Sidebar Toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+    }
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.remove('open');
+    }
+
+    // Live Clock
+    function updateClock() {
+      const clock = document.getElementById('live-clock');
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
     // Voice Feedback
     function speak(text) {
       const utterance = new SpeechSynthesisUtterance(text);
@@ -441,6 +513,7 @@
       if (pageId === 'dashboard-page' && currentUser) {
         updateDashboard();
         document.getElementById('notification-bell').classList.remove('hidden');
+        setTimeout(() => page.querySelectorAll('.card').forEach(card => card.classList.add('visible')), 100);
       } else if (pageId === 'membership-page') {
         generateQRCode();
         document.getElementById('notification-bell').classList.remove('hidden');
@@ -450,12 +523,6 @@
       } else {
         document.getElementById('notification-bell').classList.add('hidden');
       }
-      VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 15, speed: 400, glare: true, "max-glare": 0.5 });
-    }
-
-    function toggleMenu() {
-      const navLinks = document.getElementById('nav-links');
-      navLinks.classList.toggle('hidden');
     }
 
     function logoClick() {
@@ -545,7 +612,9 @@
     }
 
     function updateDashboard() {
-      document.getElementById('dashboard-welcome').textContent = `Welcome, ${currentUser.username}!`;
+      document.getElementById('dashboard-welcome').textContent = currentUser.username;
+      document.getElementById('dashboard-pic').src = currentUser.pic;
+      document.getElementById('dashboard-status').textContent = currentUser.status;
       document.getElementById('user-points').textContent = currentUser.points;
       document.getElementById('user-badges').textContent = currentUser.badges.length;
       document.getElementById('profile-pic').src = currentUser.pic;
@@ -562,6 +631,7 @@
       updateXPBar();
       updateChat();
       updateSpotlight();
+      updateRecentActivity();
     }
 
     function updateSpotlight() {
@@ -574,6 +644,11 @@
       }
     }
 
+    function updateRecentActivity() {
+      const activityEl = document.getElementById('recent-activity');
+      activityEl.innerHTML = currentUser.activity.slice(-5).reverse().map(a => `<p class="text-sm">${a.action} - ${a.timestamp}</p>`).join('');
+    }
+
     function updateXPBar() {
       const bar = document.getElementById('xp-bar');
       const progress = Math.min(currentUser.points / 1000, 1);
@@ -582,12 +657,65 @@
 
     function updateChat() {
       const chatMessages = document.getElementById('chat-messages');
+      const timestamp = new Date().toLocaleTimeString('en-US', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' });
       chatMessages.innerHTML = `
-        <div class="mb-2">Jessica: I met Keanu at the last event!</div>
-        <div class="mb-2">Alex: How do I upgrade my membership?</div>
-        <div class="mb-2">Evan: Keanu's charity work is amazing!</div>
+        <div class="mb-2 flex justify-between"><span>Jessica: I met Keanu at the last event!</span><span class="text-xs text-gray-400">${timestamp}</span></div>
+        <div class="mb-2 flex justify-between"><span>Alex: How do I upgrade my membership?</span><span class="text-xs text-gray-400">${timestamp}</span></div>
+        <div class="mb-2 flex justify-between"><span>Evan: Keanu's charity work is amazing!</span><span class="text-xs text-gray-400">${timestamp}</span></div>
       `;
     }
+
+    // Mock API for Real-Time Updates
+    function fetchUserData(userId) {
+      return new Promise(resolve => {
+        const user = users.find(u => u.id === userId);
+        setTimeout(() => resolve(user), 500);
+      });
+    }
+
+    function updateUserData(userId, updates) {
+      return new Promise(resolve => {
+        const userIndex = users.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+          users[userIndex] = { ...users[userIndex], ...updates };
+          saveUsers();
+          setTimeout(() => resolve(users[userIndex]), 500);
+        } else {
+          resolve(null);
+        }
+      });
+    }
+
+    async function refreshData() {
+      if (currentUser) {
+        const updatedUser = await fetchUserData(currentUser.id);
+        if (updatedUser) {
+          currentUser = updatedUser;
+          updateDashboard();
+          addNotification('User data refreshed!');
+        }
+      }
+    }
+
+    // Chat Polling (Mock WebSocket)
+    function pollChat() {
+      if (currentUser && document.getElementById('dashboard-page').classList.contains('active')) {
+        const chatMessages = document.getElementById('chat-messages');
+        const timestamp = new Date().toLocaleTimeString('en-US', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' });
+        const randomMessage = [
+          'Lions Gate AI: Stay tuned for today’s events!',
+          'KeanuReeves: Thanks for the support, fans!',
+          'AlexPro: Just earned a new badge!'
+        ][Math.floor(Math.random() * 3)];
+        const message = document.createElement('div');
+        message.className = 'mb-2 flex justify-between';
+        message.innerHTML = `<span class="text-orange-400">${randomMessage}</span><span class="text-xs text-gray-400">${timestamp}</span>`;
+        chatMessages.appendChild(message);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      setTimeout(pollChat, 5000);
+    }
+    if (currentUser) pollChat();
 
     function earnReward() {
       currentUser.points += 50;
@@ -607,9 +735,7 @@
         }
       });
       logActivity(currentUser, 'Earned 50 XP');
-      const userIndex = users.findIndex(u => u.id === currentUser.id);
-      users[userIndex] = currentUser;
-      saveUsers();
+      updateUserData(currentUser.id, { points: currentUser.points, badges: currentUser.badges });
       updateDashboard();
     }
 
@@ -617,17 +743,19 @@
       const input = document.getElementById('chat-input');
       if (!input.value.trim()) return;
       const chatMessages = document.getElementById('chat-messages');
+      const timestamp = new Date().toLocaleTimeString('en-US', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' });
       const message = document.createElement('div');
-      message.textContent = `${currentUser.username}: ${input.value}`;
-      message.className = 'mb-2';
+      message.className = 'mb-2 flex justify-between';
+      message.innerHTML = `<span>${currentUser.username}: ${input.value}</span><span class="text-xs text-gray-400">${timestamp}</span>`;
       chatMessages.appendChild(message);
       chatMessages.scrollTop = chatMessages.scrollHeight;
       input.value = '';
       logActivity(currentUser, 'Sent a chat message');
+      updateUserData(currentUser.id, { activity: currentUser.activity });
       setTimeout(() => {
         const aiResponse = document.createElement('div');
-        aiResponse.textContent = `Lions Gate AI: Thank you, ${currentUser.username}! Keep engaging!`;
-        aiResponse.className = 'mb-2 text-yellow-300';
+        aiResponse.className = 'mb-2 flex justify-between';
+        aiResponse.innerHTML = `<span class="text-orange-400">Lions Gate AI: Thank you, ${currentUser.username}! Keep engaging!</span><span class="text-xs text-gray-400">${timestamp}</span>`;
         chatMessages.appendChild(aiResponse);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }, 1000);
@@ -737,7 +865,7 @@
       const userId = `user-${Date.now()}`;
       const inviteLink = `${window.location.origin}${window.location.pathname}?userId=${userId}`;
       const modal = document.getElementById('create-modal');
-      document.getElementById('modal-message').textContent = `Create user '${username}' with email '${email}'? Invitation link: <a href="${inviteLink}" target="_blank" class="text-yellow-300">${inviteLink}</a>`;
+      document.getElementById('modal-message').textContent = `Create user '${username}' with email '${email}'? Invitation link: <a href="${inviteLink}" target="_blank" class="text-orange-400">${inviteLink}</a>`;
       modal.style.display = 'block';
 
       document.getElementById('confirm-create').onclick = () => {
@@ -762,14 +890,14 @@
       usersList.innerHTML = users.map((user, index) => `
         <div class="card p-4 flex justify-between items-center">
           <div class="flex items-center space-x-4">
-            ${user.pic ? `<img src="${user.pic}" alt="Profile" class="w-10 h-10 rounded-full border-2 border-yellow-300" loading="lazy">` : '<div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white">N/A</div>'}
+            ${user.pic ? `<img src="${user.pic}" alt="Profile" class="w-10 h-10 rounded-full border-2 border-orange-400" loading="lazy">` : '<div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white">N/A</div>'}
             <div>
               <h3 class="font-bold">${user.username}</h3>
               <p class="text-sm">${user.email}</p>
               <p class="text-sm">Status: ${user.status} | XP: ${user.points}</p>
               <p class="text-sm">Approved: ${user.approved ? 'Yes' : 'No'}</p>
-              ${user.accessCode ? `<p class="text-sm text-yellow-300">Access Code: ${user.accessCode}</p>` : ''}
-              ${user.membershipId ? `<p class="text-sm text-yellow-300">Membership ID: ${user.membershipId}</p>` : ''}
+              ${user.accessCode ? `<p class="text-sm text-orange-400">Access Code: ${user.accessCode}</p>` : ''}
+              ${user.membershipId ? `<p class="text-sm text-orange-400">Membership ID: ${user.membershipId}</p>` : ''}
             </div>
           </div>
           <div class="space-x-2 flex flex-wrap gap-2">
@@ -834,11 +962,22 @@
       }
     }
 
+    function showLogoutModal() {
+      document.getElementById('logout-modal').style.display = 'block';
+      document.getElementById('confirm-logout').onclick = () => {
+        logout();
+        closeLogoutModal();
+      };
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logout-modal').style.display = 'none';
+    }
+
     function logout() {
       currentUser = null;
       isAdmin = false;
       sessionStorage.removeItem('lionsgate_session');
-      document.getElementById('nav-links').classList.add('hidden');
       showPage('welcome-page');
       speak('You have been logged out.');
     }
@@ -863,7 +1002,6 @@
       document.getElementById('auth-code').addEventListener('keypress', (e) => e.key === 'Enter' && verifyCode());
       document.getElementById('admin-password').addEventListener('keypress', (e) => e.key === 'Enter' && adminLogin());
       if (currentUser) updateDashboard();
-      VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 15, speed: 400, glare: true, "max-glare": 0.5 });
     });
 
     window.logoClick = logoClick;
@@ -881,7 +1019,6 @@
     window.deleteUser = deleteUser;
     window.logout = logout;
     window.closeModal = closeModal;
-    window.toggleMenu = toggleMenu;
     window.toggleTheme = toggleTheme;
     window.toggleNotifications = toggleNotifications;
     window.updateProfile = updateProfile;
@@ -889,6 +1026,11 @@
     window.editUserPic = editUserPic;
     window.closeActivityModal = closeActivityModal;
     window.closeEditPicModal = closeEditPicModal;
+    window.toggleSidebar = toggleSidebar;
+    window.closeSidebar = closeSidebar;
+    window.showLogoutModal = showLogoutModal;
+    window.closeLogoutModal = closeLogoutModal;
+    window.refreshData = refreshData;
   </script>
 </body>
 </html>
